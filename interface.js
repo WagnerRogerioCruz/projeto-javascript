@@ -24,6 +24,8 @@ document.getElementById("formCadastro").addEventListener("submit", function(even
 //4.3 capturando dados da busca de alunoi
 document.getElementById("busca").addEventListener("input", atualizarLista)
 
+aplicarModo()
+
 //inserindo dados no map() caso nao ocorram erros
 function cadastroEstudante() {
 
@@ -213,30 +215,23 @@ function atualizarLista() {
 function aplicarModo() {
     const modo = document.getElementById("modo").value
 
+    const container = document.querySelector(".container")
     const formulario = document.querySelector(".formulario")
     const gamificacao = document.querySelector(".gamificacao")
 
     if (modo === "professor") {
         formulario.style.display = "block"
         gamificacao.style.display = "none"
+
+        container.classList.remove("modo-aluno")
+        container.classList.add("modo-professor")
+
     } else {
         formulario.style.display = "none"
         gamificacao.style.display = "block"
-    }
-}
 
-function aplicarModo() {
-    const modo = document.getElementById("modo").value
-
-    const formulario = document.querySelector(".formulario")
-    const gamificacao = document.querySelector(".gamificacao")
-
-    if (modo === "professor") {
-        formulario.style.display = "block"
-        gamificacao.style.display = "none"
-    } else {
-        formulario.style.display = "none"
-        gamificacao.style.display = "block"
+        container.classList.remove("modo-professor")
+        container.classList.add("modo-aluno")
     }
 }
 
@@ -246,25 +241,49 @@ function adivinhar() {
         return
     }
 
+    // passo 1. Gerar o número secreto
     const numeroSecreto = Math.floor(Math.random() * 20) + 1
     let tentativa = 0
     let chute = 0
 
+    // passo 2. loop while (enquanto eu não adivinhar repete)
     while (chute !== numeroSecreto) {
-        let entrada = prompt(`(${alunoSelecionado.nome}) Adivinhe:`)
 
-        if (entrada === null) return
+         // pegando o chute do usuário
+        let entrada = prompt(`(${alunoSelecionado.nome}) Adivinhe o numero entre 1 e 20 ou digite 'sair':`)
+
+        if (entrada === null || entrada.toLowerCase() === 'sair') {
+            alert('Jogo cancelado! O número era: ' + numeroSecreto);
+            return
+        }
 
         chute = Number(entrada)
-        tentativa++
+
+        //validação do chute , NÃO conta tentativa inválida
+        if (isNaN(chute) || chute < 1 || chute > 20) {
+            alert("Digite um número válido entre 1 e 20!");
+            continue;
+        }
+
+        tentativa++ // Incrementa meu contador de tentativas
 
         if (chute === numeroSecreto) {
-            alert(`Acertou! +0.5 na média!`)
 
-            alunoSelecionado.nota3 += 0.5
+            //debug de tentativas
+            console.log("Tentativas:", tentativa)
+
+            // define vlr do bonus na media, menos tentativas = bonus maior, recebe no minimo 0,1, nao fica negativo
+            let bonus = Math.max(0.1, 1 - tentativa * 0.1) // menos tentativas = bonus maior, recebe no minimo 0,1
+
+            alert(`Parabéns! Você acertou o número ${numeroSecreto} em ${tentativa} tentativas. +${bonus.toFixed(2)} na média!`)
+
+            alunoSelecionado.nota3 = Math.min(10, alunoSelecionado.nota3 + bonus) //nao deixa media passar de 10 apos somar o bonus
 
             atualizarLista()
             salvarDados()
+        }else {
+            alert(chute > numeroSecreto ? "MENOS! O número secreto é menor." : "MAIS! O número secreto é maior.");
         }
     }
 }
+
